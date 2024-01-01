@@ -165,3 +165,4 @@ FastGAN-pytorch
 lightweight-gan*
 .aim
 **/models/**
+**/results/**
