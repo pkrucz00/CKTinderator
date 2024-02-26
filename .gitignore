@@ -167,3 +167,4 @@ lightweight-gan*
 **/models/**
 **/results/**
 **/model/**
+*.dat
