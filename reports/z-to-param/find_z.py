@@ -7,7 +7,7 @@ from pathlib import Path
 from lightweight_gan import LightweightGAN
 import torch
 
-from glob import glob
+from time import time
 
 from urllib.parse import urlparse
 from torch.hub import download_url_to_file, HASH_REGEX
@@ -19,7 +19,7 @@ except BaseException:
 LATENT_DIM = 256
 IMG_SIZE = 256
 
-torch.manual_seed(2048)
+torch.manual_seed(42)
 
 # landmarks model
 
@@ -77,24 +77,27 @@ def load_generator() -> torch.nn.Module:
 
 
 class DifferentiableLandmarks(torch.nn.Module):
-    def __init__(self, generator, landmarks_model):
+    def __init__(self, generator, landmarks_model, images: torch.Tensor = None):
         super().__init__()
-        self.z = torch.nn.Parameter(torch.randn( (1, LATENT_DIM), requires_grad=True, device="cuda"))
+        self.z = torch.nn.Parameter(pick_best_random_z(images, generator))
         
         self.landmarks_model = landmarks_model
         self.generator = generator
         self.generator.eval()
         self.landmarks_model.eval()
-        
+               
         for p in self.generator.parameters():
             p.requires_grad = False
             
         for p in self.landmarks_model.parameters():
             p.requires_grad = False
         
+        self.curr_image = self.generator(self.z)
+        
         
     def forward(self):
-        return self.landmarks_model(self.generator(self.z))
+        self.curr_image = self.generator(self.z)
+        return self.landmarks_model(self.curr_image)
     
     def get_z(self) -> torch.Tensor:
         return self.z.clone().detach().cpu()
@@ -106,20 +109,39 @@ class DifferentiableLandmarks(torch.nn.Module):
         print(f"Model: {self.training}")
         
         
-def find_z(image: torch.Tensor, lr=1e-2, iters=500) -> torch.Tensor:   
+def pick_best_random_z(images: torch.Tensor, generator: torch.nn.Module, n=100, criterion=torch.nn.MSELoss()) -> torch.Tensor:
+    batch_size = images.shape[0]
+    z = torch.randn( (batch_size, LATENT_DIM), requires_grad=True, device="cuda")
+    z_best = z.clone()
+    loss_best = float("inf")
+    
+    for _ in range(n):
+        z = torch.randn( (batch_size, LATENT_DIM), requires_grad=True, device="cuda")
+        images_gen = generator(z)
+        with torch.no_grad():
+            loss = criterion(images, images_gen)
+            if loss < loss_best:
+                z_best = z.clone()
+                loss_best = loss.clone()
+            
+    return z_best
+    
+        
+def find_z(images: torch.Tensor, lr=1e-2, iters=200) -> torch.Tensor:   
     generator = load_generator().to("cuda:0")
     landmarks_model = load_landmarks_model()
-    model = DifferentiableLandmarks(generator, landmarks_model)
+    model = DifferentiableLandmarks(generator, landmarks_model, images)
     
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    y_target = landmarks_model(image.unsqueeze(0)).detach()
+    y_target = landmarks_model(images).detach()
     
     for _ in range(iters):
         y_pred = model()
-        loss = criterion(y_target, y_pred)
+        loss = criterion(y_target, y_pred) + 5 * criterion(images, model.curr_image)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
     
     return  model.get_z()
+
