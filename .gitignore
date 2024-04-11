@@ -168,3 +168,4 @@ lightweight-gan*
 **/results/**
 **/model/**
 *.dat
+**/prepare_files.pdf

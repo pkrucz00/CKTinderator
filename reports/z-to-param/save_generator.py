@@ -358,7 +358,7 @@ class Generator(nn.Module):
         return self.out_conv(x)
 
 
-def save_generator_model():
+def save_generator_model(save_state=False):
     # Load the generator model
     
     generator = Generator(
@@ -368,15 +368,20 @@ def save_generator_model():
         freq_chan_attn=False
     )
     model = torch.load("model/model_174.pt")["GAN"]
-    print(model)
-    generator.load_state_dict(model.G, strict=False)
+    generator.load_state_dict(model, strict=False)
     generator.eval()
-    
 
     # Save the TorchScript module to the model directory
-    model_path = './model/generator_test.pt'
-    torch.save(generator, model_path)
+    
+    if not save_state:
+        model_path = './model/generator.pt'
+        torch.save(generator, model_path)
+    else:
+        dict_path = './model/generator_dict.pt'
+        state_dict = generator.state_dict()
+        torch.save(state_dict, dict_path)
+
 
 # Call the function to save the generator model
 if __name__=="__main__":
-    save_generator_model()
+    save_generator_model(save_state=True)
