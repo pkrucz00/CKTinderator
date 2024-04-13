@@ -60,7 +60,7 @@ def load_landmarks_model():
 
 
 # Generator
-def load_generator() -> torch.nn.Module:
+def load_generator() -> torch.nn.Module:   # TODO change this to a generator model
     model_filepath = Path("model/model_174.pt")
     model = torch.load(model_filepath)
     
