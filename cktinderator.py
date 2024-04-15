@@ -3,9 +3,27 @@ import numpy as np
 import pickle
 
 import src.dna_manipulation as dna_manipulation
+from src.find_z import find_z
+from src.image_align import image_align
+import matplotlib.pyplot as plt
 
-def prep_image(image_path):
-    pass
+import torch
+from torchvision.transforms import v2
+
+
+IMG_SIZE = 256
+
+
+def prep_image(image_path) -> torch.Tensor:
+    aligned_image =  image_align(image_path)
+    image_min_size = min(aligned_image.size)
+    transforms = v2.Compose([
+        v2.ToImage(),
+        v2.CenterCrop(image_min_size),
+        v2.Resize((IMG_SIZE, IMG_SIZE), antialias=True),
+        v2.ToDtype(torch.float32, scale=True)
+    ])
+    return transforms(aligned_image).to("cuda:0")
 
 
 def load_encoder():
@@ -13,10 +31,6 @@ def load_encoder():
     with open(ENCODER_PATH, 'rb') as f:
         encoder = pickle.load(f)
     return encoder
-
-
-def find_z(image):
-    pass
 
 
 def modify_dna(dna_path: str, parameters: np.ndarray) -> str:
@@ -31,18 +45,18 @@ def modify_dna(dna_path: str, parameters: np.ndarray) -> str:
 @click.option('--dna', prompt='DNA file', help='DNA file used as a template')
 @click.option('--output', prompt='Output file', default="result-dna.txt", help='Output file to be saved', type=click.Path())
 def main(image, dna, output):
-    # preprocessed_image = prep_image(image)
-    
+    preprocessed_image = prep_image(image)
     encoder = load_encoder()
     
-    # z = find_z(preprocessed_image)
-    z = np.random.rand(1, 256)
+    z = find_z(preprocessed_image)
+    print("Z:", z.shape)
     parameters = np.rint(encoder.predict(z))[0]    
+    print("Parameters:", parameters)
     modified_dna = modify_dna(dna, parameters)
     
-    print(f"Saving output to {output}")
-    with open(output, "w") as f:
-        f.write(modified_dna)
+    # print(f"Saving output to {output}")
+    # with open(output, "w") as f:
+    #     f.write(modified_dna)
         
     print("Done.")
     
