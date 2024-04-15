@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 
 import src.dna_manipulation as dna_manipulation
-from src.find_z import find_z
+from src.find_z import find_z, load_generator
 from src.image_align import image_align
 import matplotlib.pyplot as plt
 
@@ -26,8 +26,16 @@ def prep_image(image_path) -> torch.Tensor:
     return transforms(aligned_image).to("cuda:0")
 
 
+def load_normalizer():
+    NORMALIZER_PATH = "models/normalizer.pickle"
+    with open(NORMALIZER_PATH, 'rb') as f:
+        normalizer = pickle.load(f)
+        
+    return normalizer
+
+
 def load_encoder():
-    ENCODER_PATH = "models/LinearRegressionZ.pickle"
+    ENCODER_PATH = "models/MLPRegressorZ.pickle"
     with open(ENCODER_PATH, 'rb') as f:
         encoder = pickle.load(f)
     return encoder
@@ -46,17 +54,22 @@ def modify_dna(dna_path: str, parameters: np.ndarray) -> str:
 @click.option('--output', prompt='Output file', default="result-dna.txt", help='Output file to be saved', type=click.Path())
 def main(image, dna, output):
     preprocessed_image = prep_image(image)
+    normalizer = load_normalizer()
     encoder = load_encoder()
+    generator = load_generator()
     
     z = find_z(preprocessed_image)
+    generated_image = generator(torch.from_numpy(z))
+    plt.imshow(generated_image[0].detach().cpu().numpy().transpose(1, 2, 0))
+    plt.show()
     print("Z:", z.shape)
-    parameters = np.rint(encoder.predict(z))[0]    
+    parameters = np.rint(encoder.predict(normalizer.transform(z)))[0]    
     print("Parameters:", parameters)
     modified_dna = modify_dna(dna, parameters)
     
-    # print(f"Saving output to {output}")
-    # with open(output, "w") as f:
-    #     f.write(modified_dna)
+    print(f"Saving output to {output}")
+    with open(output, "w") as f:
+        f.write(modified_dna)
         
     print("Done.")
     
