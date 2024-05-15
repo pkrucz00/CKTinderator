@@ -42,7 +42,7 @@ def load_encoder():
 
 
 def modify_dna(dna_path: str, parameters: np.ndarray) -> str:
-    GENES_TO_CHANGE = ['eye_distance', 'eye_height', 'eye_angle', 'jaw_width', 'jaw_height']
+    GENES_TO_CHANGE = ['jaw_height', 'jaw_width',  'eye_angle', 'eye_height', 'eye_distance']
     dna_text = dna_manipulation.load_dna(dna_path)
     params_dict = {gene: value for gene, value in zip(GENES_TO_CHANGE, parameters)}
     return  dna_manipulation.change_dna(dna_text, params_dict)
