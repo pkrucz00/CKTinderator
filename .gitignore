@@ -169,3 +169,4 @@ lightweight-gan*
 **/model/**
 *.dat
 **/prepare_files.pdf
+**/regressors/**
