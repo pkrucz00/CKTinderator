@@ -123,7 +123,7 @@ def pick_best_random_z(images: torch.Tensor, generator: torch.nn.Module, n=100, 
     return z_best
     
         
-def find_z(image: torch.Tensor, lr=1e-2, iters=200) -> np.ndarray:   
+def find_z(image: torch.Tensor, lr=1e-3, iters=500) -> np.ndarray:   
     generator = load_generator().to("cuda:0")
     landmarks_model = load_landmarks_model()
     model = DifferentiableLandmarks(generator, landmarks_model, image.unsqueeze(0))
