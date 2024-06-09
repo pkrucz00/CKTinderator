@@ -41,7 +41,8 @@ def modify_dna(dna_path: str, parameters: np.ndarray) -> str:
 @click.option('--image', prompt='Image file', help='Image file to be processed', type=click.Path(exists=True))
 @click.option('--dna', prompt='DNA file', help='DNA file used as a template')
 @click.option('--output', prompt='Output file', default="result-dna.txt", help='Output file to be saved', type=click.Path())
-def main(image, dna, output):
+@click.option('--generated', prompt='Generated file path', default="result-generated.png", help='Generated file path', type=click.Path())
+def main(image, dna, output, generated):
     preprocessed_image = prep_image(image)
     encoder = load_encoder()
     generator = load_generator()
@@ -49,7 +50,8 @@ def main(image, dna, output):
     z = find_z(preprocessed_image)
     generated_image = generator(torch.from_numpy(z))
     plt.imshow(generated_image[0].detach().cpu().numpy().transpose(1, 2, 0))
-    plt.show()
+    plt.savefig(generated)
+    
     print("Z:", z.shape)
     parameters = np.rint(encoder.predict(z))[0]    
     print("Parameters:", parameters)
