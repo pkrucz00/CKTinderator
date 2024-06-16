@@ -42,7 +42,15 @@ def modify_dna(dna_path: str, parameters: np.ndarray) -> str:
 @click.option('--dna', prompt='DNA file', help='DNA file used as a template')
 @click.option('--output', prompt='Output file', default="result-dna.txt", help='Output file to be saved', type=click.Path())
 @click.option('--generated', prompt='Generated file path', default="result-generated.png", help='Generated file path', type=click.Path())
-def main(image, dna, output, generated):
+@click.option('--random', prompt='Get random DNA', default=False, help='Get random DNA', type=bool)
+def main(image, dna, output, generated, random):
+    if random:
+        random_parameters = np.random.randint(0, 255, 5)
+        print(random_parameters)
+        with open(output, "w") as file:
+            file.write(modify_dna(dna, random_parameters))
+        return
+    
     preprocessed_image = prep_image(image)
     encoder = load_encoder()
     generator = load_generator()
