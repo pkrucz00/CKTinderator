@@ -1,0 +1,5 @@
+['/media/pawel/DATA/tmp/freddie_mercuries/en_face/aligned/align-20240227_124655323843_head_genes_0000096268.jpg'
+ '/media/pawel/DATA/tmp/freddie_mercuries/en_face/aligned/align-20240227_075355862487_head_genes_0000064594.jpg'
+ '/media/pawel/DATA/tmp/freddie_mercuries/en_face/aligned/align-20240227_123547782329_head_genes_0000095098.jpg'
+ '/media/pawel/DATA/tmp/freddie_mercuries/en_face/aligned/align-20240226_232411897237_head_genes_0000007127.jpg'
+ '/media/pawel/DATA/tmp/freddie_mercuries/en_face/aligned/align-20240227_011542313977_head_genes_0000019914.jpg']
